@@ -7,6 +7,8 @@ class Oculus():
         self._camera = camera
 
         self._matrix_world = camera.matrix_world.copy()
+        self._matrix_prev = self._matrix_world.copy()
+
         self._lens = camera.data.lens
 
         self._checkModule()
@@ -69,7 +71,8 @@ class Oculus():
         if not matrix:
             return
 
-        self._camera.matrix_world =  self._matrix_world * matrix
+        final_matrix = self._getFinalMatrix(matrix)
+        self._camera.matrix_world = final_matrix
 
     def quit(self):
         from oculusvr import Hmd
@@ -108,3 +111,15 @@ class Oculus():
             return matrix
 
         return None
+
+    def _getFinalMatrix(self, oculus_matrix):
+        """Support view navigation (Shift + F)"""
+        from mathutils import Matrix
+
+        translation = self._camera.matrix_world.translation - self._matrix_prev.translation
+        print(translation)
+        print(type(translation))
+
+        final_matrix = Matrix.Translation(translation) * self._matrix_world * oculus_matrix
+        self._matrix_prev = final_matrix
+        return final_matrix
